@@ -57,14 +57,22 @@ def root():
 def endpoint_upload():
     """Upload"""
     if "file" not in request.files:
-        return redirect(url_for(''))
+        return redirect('/')
 
     _file = request.files['file']
+
+    name, ext = os.path.splitext(os.path.basename(_file.filename))
+
+    if ext.lower() not in ['pdf']:
+        # TODO - error message "need a pdf"
+        return redirect('/')
+
     filename = f"{uuid.uuid4()}.pdf"
     abspath = os.path.join(APP.config['UPLOAD_PATH'], filename)
     _file.save(abspath)
     emails = get_emails(abspath)
     if not emails:
+        # TODO - Return an error message
         return "None found"
     string_io = StringIO()
     csv_writer = writer(string_io)
@@ -72,7 +80,6 @@ def endpoint_upload():
     for row in emails:
         csv_writer.writerow([row])
     output = make_response(string_io.getvalue())
-    name = os.path.splitext(os.path.basename(_file.filename))[0]
     output.headers["Content-Disposition"] = f"attachment; filename={name}_emails.csv"
     output.headers["Content-type"] = "text/csv"
     return output
