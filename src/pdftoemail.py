@@ -1,26 +1,15 @@
-"""Script that extracts e-mail addresses from a pdf (using pdftotext). Also provides FLASK hooks"""
-
-from flask import Flask, request, render_template, make_response, redirect, url_for
+"""Script that extracts e-mail addresses from a pdf (using pdftotext)."""
 import os.path
-import uuid
 from subprocess import call
 from re import findall
 import argparse
-from csv import writer
-from io import StringIO
 
-# Initialize flask
-APP = Flask(__name__)
-APP.config['UPLOAD_PATH'] = "uploads"
-
-# Templates
-UPLOAD_TEMPLATE = "upload.html"
 
 # Conversion settings
 BINARY = 'pdftotext'
 
 # Pattern to match an e-mail address
-E_MAIL_PATTERN = "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}"
+E_MAIL_PATTERN = r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}"
 
 
 def convert_to_text(pdf_path):
@@ -28,7 +17,6 @@ def convert_to_text(pdf_path):
     # Convert to .txt
     command = [BINARY, "-enc", "UTF-8"]
     command.append(pdf_path)
-    print(command)
     call(command)
     txt_path = "{base}.txt".format(base=os.path.splitext(pdf_path)[0])
     if os.path.exists(txt_path):
@@ -45,44 +33,6 @@ def get_emails(pdf_path):
 
     with open(txt_path, 'r') as handle:
         return findall(E_MAIL_PATTERN, handle.read())
-
-
-@APP.route('/')
-def root():
-    """Simple root entry"""
-    return render_template(UPLOAD_TEMPLATE)
-
-
-@APP.route('/upload', methods=['POST'])
-def endpoint_upload():
-    """Upload"""
-    if "file" not in request.files:
-        return redirect('/')
-
-    _file = request.files['file']
-
-    name, ext = os.path.splitext(os.path.basename(_file.filename))
-
-    if ext.lower()[1:] not in ['pdf']:
-        # TODO - error message "need a pdf"
-        return "Only works on a pdf"
-
-    filename = f"{uuid.uuid4()}.pdf"
-    abspath = os.path.join(APP.config['UPLOAD_PATH'], filename)
-    _file.save(abspath)
-    emails = get_emails(abspath)
-    if not emails:
-        # TODO - Return an error message
-        return "None found"
-    string_io = StringIO()
-    csv_writer = writer(string_io)
-    csv_writer.writerow(["e-mail"])
-    for row in emails:
-        csv_writer.writerow([row])
-    output = make_response(string_io.getvalue())
-    output.headers["Content-Disposition"] = f"attachment; filename={name}_emails.csv"
-    output.headers["Content-type"] = "text/csv"
-    return output
 
 
 def parse_args():

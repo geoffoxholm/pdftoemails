@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+
+<body>
+    <h1>PDF to emails</h1>
+    <p>Upload a <tt>pdf</tt> get a <tt>csv</tt> spreadsheet of all the e-mails found in the document. Please <a href="https://github.com/geoffoxholm/pdftoemails">see here</a> for more information, or to report a bug.</p>
+    <form action="/" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" />
+        <input type="submit" value="Get emails" />
+    </form>
+    {% if error %}
+        <p class="error"><strong>Error:</strong> {{ error }}</p>
+    {% endif %}
+</body>
+
+</html>
