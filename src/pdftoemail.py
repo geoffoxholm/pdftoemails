@@ -17,7 +17,7 @@ APP.config['UPLOAD_PATH'] = "uploads"
 UPLOAD_TEMPLATE = "upload.html"
 
 # Conversion settings
-BINARY = '/usr/local/bin/pdftotext'
+BINARY = 'pdftotext'
 
 # Pattern to match an e-mail address
 E_MAIL_PATTERN = "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}"
@@ -63,9 +63,9 @@ def endpoint_upload():
 
     name, ext = os.path.splitext(os.path.basename(_file.filename))
 
-    if ext.lower() not in ['pdf']:
+    if ext.lower()[1:] not in ['pdf']:
         # TODO - error message "need a pdf"
-        return redirect('/')
+        return "Only works on a pdf"
 
     filename = f"{uuid.uuid4()}.pdf"
     abspath = os.path.join(APP.config['UPLOAD_PATH'], filename)
